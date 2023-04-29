@@ -1,0 +1,25 @@
+.Rproj.user
+*.Rcheck
+.Rd2pdf*
+*~
+*.Rhistory
+*.dta
+*.json
+*.xlsx
+*.json
+*.tiff
+*.tif
+*.xls
+*.DS_store
+*.DS_Store
+#Ignore input and output folders
+papers
+papers/
+shapefiles
+shapefiles/
+raw
+raw/
+output
+output/
+documentation
+documentation/
