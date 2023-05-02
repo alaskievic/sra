@@ -19,6 +19,20 @@ map_data <- murdock@data
 map_africa <- st_read(dsn = here("data", "raw", "spatial", "africa_shp", 
                                  "afr_g2014_2013_0.shp"))
 
+murdock_africa <- tm_shape(map_murdock) +
+  tm_borders(col = "black", alpha = 0.5, lwd = 1.25) +
+  tm_shape(map_africa) + 
+  tm_borders(col = "red", lwd = 2) + 
+  tm_add_legend(type = "line", labels = c("Country Boundaries", "EA Boundaries"), 
+                col = c("red", "black")) +
+  tm_layout(legend.position = c("right", "bottom"),
+            legend.text.size = 1,
+            frame = FALSE)
+
+tmap_save(murdock_africa, here("data", "output", "figures", 
+                               "murdock_africa.png"))
+
+
 merged_map <- ggplot(data = map_africa) + 
   geom_sf(data = map_murdock, color = "black", size = 0.2, fill = "orange")+
   geom_sf(data = map_africa, color = "red", size = 0.6, fill = NA) +
@@ -51,21 +65,27 @@ map_world <- st_read(dsn = here("data", "raw", "spatial", "world_shp",
                                  "World_Countries__Generalized_.shp"))
 
 
-full_map <- ggplot(data = map_world) +
-  geom_sf(fill = NA) +
-  geom_point(data = ea_sccs, aes(x = Long, y = Lat, colour = type), size = 1) +
-  scale_color_manual(name = "", values = c("blue", "red"), labels = c("Only EA", "EA + SCCS")) +
-  coord_sf(datum = NA) +
-  theme_bw() + 
-  theme(panel.border = element_blank(),
-           axis.text.x = element_blank(),
-           axis.text.y = element_blank(),
-           panel.grid = element_blank(),
-           axis.ticks = element_blank(), 
-           axis.title.y=element_blank(),
-           axis.title.x=element_blank())
+ea_loc <- st_as_sf(ea_loc, coords = c("Long", "Lat"))
+sccs_loc <- st_as_sf(sccs_loc, coords = c("Long", "Lat"))
 
-full_map
+
+ea_sccs_dotmap <- tm_shape(map_world) +
+  tm_borders() +
+  tm_shape(ea_loc) +
+  tm_dots(col = "blue") + 
+  tm_shape(sccs_loc) + 
+  tm_dots(col = "red") +
+  tm_add_legend(type = "symbol", labels = c("Only EA", "EA + SCCS"), 
+                col = c("blue", "red")) +
+  tm_layout(legend.position = c("right", "bottom"),
+            legend.text.size = 1,
+            frame = FALSE)
+
+ea_sccs_dotmap
+
+tmap_save(ea_sccs_dotmap, here("data", "output", "figures", 
+                               "ea_sccs_dotmap.png"))
+
   
 ggsave("full_map.png", path = here("data", "output",
                                            "ea_sccs_centroid.png"), dpi = 300)
