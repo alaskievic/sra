@@ -86,11 +86,71 @@ ea_sccs_dotmap
 tmap_save(ea_sccs_dotmap, here("data", "output", "figures", 
                                "ea_sccs_dotmap.png"))
 
+
+
+
+
+
+ea_data_nolang <- read_csv(file = here("data", "raw", "murdock_ea", "data.csv"))
+
+ea_lang <- read_csv(file = here("data", "raw", "murdock_ea", "societies.csv")) %>%
+  rename(soc_id = id)
+
+
+# Merging both
+ea_data <- full_join(ea_data_nolang, ea_lang, by = "soc_id")
+
+
+# Saving
+
+
+############### 3. Checking Ethnologue ##############
+
+ethno <- st_read(dsn = here("data", "raw", "nunn_ancestral",
+                            "Ethnologue_16_shapefile", 
+                            "langa_no_overlap_biggest_clean.shp"))
+
+
+plot(ethno$geometry)
+
+ethno_data <- ethno %>% st_drop_geometry()
+
+tm_shape(ethno) + 
+  tm_borders() + 
+  tmap_options(check.and.fix = TRUE)
+
+
+
+############### 4. Glottolog ##############
+
+glotto_geo <- read_csv(file = here("data", "raw", "glottolog", "languages_and_dialects_geo.csv"))
+
+lang_geo <- glotto_geo %>% filter(level == "language") %>%
+  filter(latitude != is.na(latitude))
+
+map_world <- st_read(dsn = here("data", "raw", "spatial", "world_shp", 
+                                "World_Countries__Generalized_.shp"))
+
+lang_geo <- st_as_sf(lang_geo, coords = c("longitude", "latitude"))
+
+
+
+glotto_lang_dotmap <- tm_shape(map_world) +
+  tm_borders() +
+  tm_shape(lang_geo) +
+  tm_dots(col = "blue") + 
+  tm_layout(legend.position = c("right", "bottom"),
+            legend.text.size = 1,
+            frame = FALSE)
+
+glotto_lang_dotmap
+
+tmap_save(ea_sccs_dotmap, here("data", "output", "figures", 
+                               "ea_sccs_dotmap.png"))
+
+
+glotto_languoid <- read_csv(file = here("data", "raw", "glottolog", "languoid.csv"))
   
-ggsave("full_map.png", path = here("data", "output",
-                                           "ea_sccs_centroid.png"), dpi = 300)
-
-
-
-
+  
+  
 
