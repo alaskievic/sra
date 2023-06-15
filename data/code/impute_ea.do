@@ -4,19 +4,33 @@ set maxvar 15000
 use ".././raw/folklore/Replication_Tables_Figures/Ethnographic_Atlas_Regressions_Ready.dta", clear
 	   
 
+* Basic method for imputing missing values - High Gods
+g v34_comp=0       if v34==.
+replace v34_comp=1 if v34!=.
 
-************************************************************************************************************************************
-**** APPENDIX FIGURES 6A-6D*********************************************************************************************************
-************************************************************************************************************************************
-**** APPENDIX FIGURE 6A
-binscatter lncrops               v5 if motifs_total>4, absorb(continent_EA)  line(qfit) controls(lnyear_firstpub lnnmbr_title) ytitle(Ln(Share of Wheat, Rice and Maize Motifs in the Group's Folklore))  xtitle(Share of Subsistence from Agriculture)           title(Share of Motifs on Crops and % of Subsistence from Agriculture)            subtitle("Conditional on Baseline Controls and Continental FE") note("Baseline Controls: ln(# of Publications), ln(Year of First Publication)")
-**** APPENDIX FIGURE 6B
-binscatter lnpastoralism_related v4 if motifs_total>4, absorb(continent_EA)  line(qfit) controls(lnyear_firstpub lnnmbr_title) ytitle(Ln(Share of Motifs on Pastoralism in the Group's Folklore))         xtitle(Share of Subsistence from Animal Husbandry)      title(Share of Motifs on Pastoralism and % of Subsistence from Animal Husbandry) subtitle("Conditional on Baseline Controls and Continental FE") note("Baseline Controls: ln(# of Publications), ln(Year of First Publication)")
-**** APPENDIX FIGURE 6C
-binscatter lnfish_related        v3 if motifs_total>4, absorb(continent_EA)  line(qfit) controls(lnyear_firstpub lnnmbr_title) ytitle(Ln(Share of Motifs on Fish in the Group's Folklore))                xtitle(Share of Subsistence from Fishing)               title(Share of Fish Motifs and % of Subsistence from Fishing)                    subtitle("Conditional on Baseline Controls and Continental FE") note("Baseline Controls: ln(# of Publications), ln(Year of First Publication)")
-**** APPENDIX FIGURE 6D
-binscatter lnhunt_related       h_g if motifs_total>4, absorb(continent_EA)  line(qfit) controls(lnyear_firstpub lnnmbr_title) ytitle(Ln(Share of Motifs on Hunt in the Group's Folklore))                xtitle(Share of Subsistence from Hunting and Gathering) title(Share of Hunt Motifs and % of Subsistence from H/G)                        subtitle("Conditional on Baseline Controls and Continental FE") note("Baseline Controls: ln(# of Publications), ln(Year of First Publication)")
-************************************************************************************************************************************
+reg  v34 pca_highgods if motifs_total>4, cluster(v98) 
+predict pred_v34 if atlas!="" & motifs_total>4
+sum pred_v34 if v34!=., d
+sum pred_v34 if v34==., d
+ttest pred_v34, by(v34_comp)
+
+* Basic method for imputing missing values - Jurisdictional hierarchy beyond local community
+g gr_comp=0 if v33==.
+replace gr_comp=1 if v33!=.
+
+gen lnking_related = log(king_related + 0.01)
+
+reg  v33 lnking_related if motifs_total>4, cluster(v98)
+predict pred_v33 if atlas!="" & motifs_total>4
+sum pred_v33 if v33!=., d
+sum pred_v33 if v33==., d
+ttest pred_v33, by(gr_comp)
+
+
+
+* Keeping most important variables
+keep atlas-crops pred_v33 trade_related pred_v33 pred_v34
+save ".././output/ea_folklore.dta"
 
 *******************************************************************************************************
 ********** Table IV: Folklore and High Gods************************************************************					
@@ -62,16 +76,6 @@ estout k0 k1 k2 k3, cells(b(star fmt(%9.4f)) se(par) t(fmt(%9.2f)))   ///
        stats(r2_a N , fmt(%9.3f %9.0g) labels(Adj. R-square)) keep(extended v33) starlevels(* 0.1 ** 0.05  *** 0.01) style(fixed)
 ************************************************************************************************************************************
 
-	   
-************************************************************************************************************************************
-**** APPENDIX FIGURES 7A-7B ********************************************************************************************************
-************************************************************************************************************************************
-**** APPENDIX FIGURE 7A
-binscatter lnmother_related extended if motifs_total>4, line(qfit) controls(lnyear_firstpub lnnmbr_title) absorb(continent_EA)       ytitle(Ln (Share of Mother Motifs)) xtitle(Groups Organized Along Extended Family Lines) title(Mother-Related Motifs in the Oral Tradition and Family Organization)   subtitle("Conditional on Continental FE and Baseline Controls")  note("Baseline Controls: ln(# of Publications) and ln(Year of First Publication)")
-**** APPENDIX FIGURE 7B
-binscatter lnking_related      v33   if motifs_total>4, line(qfit) controls(lnyear_firstpub lnnmbr_title) absorb(continent_EA)       ytitle(Ln (Share of King Motifs)) xtitle(Degree of Political Complexity) title(King-Related Motifs in the Oral Tradition and Political Hierarchy)   subtitle("Conditional on Continental FE and Baseline Controls")  note("Baseline Controls: ln(# of Publications) and ln(Year of First Publication)")
-************************************************************************************************************************************
-
 
 g gr_comp=0 if v33==.
 replace gr_comp=1 if v33!=.
@@ -87,46 +91,7 @@ ttest pred_v33, by(gr_comp)
 kdensity pred_v33 if v33==., addplot(kdensity pred_v33 if v33!=.)
 ************************************************************************************************************************************
 
-************************************************************************************************************************************
-***** Table III: Comparing Correlations Between the Sample where Ethnographic Values are Observed to those in the Imputed Sample****
-************************************************************************************************************************************
-***** PANEL A****
-************************************************************************************************************************************
-cor v33      h_g if v33!=.
-cor pred_v33 h_g if v33==.
 
-cor v33      v3 if v33!=.
-cor pred_v33 v3 if v33==.
-
-cor v33      v4 if v33!=.
-cor pred_v33 v4 if v33==.
-
-cor v33      v5 if v33!=.
-cor pred_v33 v5 if v33==.
-
-cor v33      agri_int if v33!=.
-cor pred_v33 agri_int if v33==.
-
-cor v33      class_strat if v33!=.
-cor pred_v33 class_strat if v33==.
-
-cor v33      v34 if v33!=.
-cor pred_v33 v34 if v33==.
-
-cor v33      v33 if v33!=.
-//cor pred_v33 v33 if v33==.
-
-
-
-
-g v34_comp=0       if v34==.
-replace v34_comp=1 if v34!=.
-
-reg  v34 pca_highgods if motifs_total>4, cluster(v98) 
-predict pred_v34 if atlas!="" & motifs_total>4
-sum pred_v34 if v34!=., d
-sum pred_v34 if v34==., d
-ttest pred_v34, by(v34_comp)
 
 ************************************************************************************************************************************
 **** APPENDIX FIGURE 8B ****************************************
@@ -164,25 +129,6 @@ cor pred_v34 v33 if v34==.
 cor v34 v34 if v34!=.
 *cor pred_v34 v34 if v34==.
 
-
-*********************************************************************************************************************************
-*************** Table V: Punishment of Tricksters in the Oral Traditions and Trust Today						
-*************** PANEL C: ACROSS GROUPS; COLUMNS (3) - (6) *****************************************************************
-*********************************************************************************************************************************
-global cont0  lnyear_firstpub lnnmbr_title if motifs_total>4
-
-areg v31 tricksters_punish $cont0             , cluster(v98) a(continent_EA)
-est store c3
-areg v31 tricksters_punish $cont0             , cluster(v98) a(country_EA)
-est store c4
-areg v31 tricksters_punish $cont0 & agridom==1, cluster(v98) a(continent_EA)
-est store c5
-areg v31 tricksters_punish $cont0 & agridom==1, cluster(v98) a(country_EA)
-est store c6
-
-estout c3 c4 c5 c6, cells(b(star fmt(%9.4f)) se(par) t(fmt(%9.2f)))   ///
-       stats(r2_a N , fmt(%9.3f %9.0g) labels(Adj. R-square)) keep(tricksters_punish) starlevels(* 0.1 ** 0.05  *** 0.01) style(fixed)
-*********************************************************************************************************************************
 
 
 
