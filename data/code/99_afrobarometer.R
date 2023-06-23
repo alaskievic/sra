@@ -30,7 +30,7 @@ leda <- LEDA$new()
 list.dict <- leda$get_list_dict()
 
 
-map_afro_link <- leda$link_set(lists.a = list(type = "Afrobarometer", round = 6),
+map_afro_set <- leda$link_set(lists.a = list(type = "Afrobarometer", round = 6),
                          lists.b = list(type = "Murdock_Map"), 
                          link.level = "dialect",  
                          by.country = TRUE, 
@@ -39,25 +39,58 @@ map_afro_link <- leda$link_set(lists.a = list(type = "Afrobarometer", round = 6)
                          drop.ethno.id = TRUE, 
                          add_listmetadata = TRUE)
 
-map_afro_link %<>% dplyr::select(c("a.type", "a.groupvar", "a.marker", "b.type",
+map_afro_set %<>% dplyr::select(c("a.type", "a.groupvar", "a.marker", "b.type",
                                    "a.iso3c", "b.iso3c", "a.group", "b.group",
                                    "iso3c"))
-map_afro_link %>%
-  dplyr::select(b.type) %>%
-  summarise_all(funs(sum(is.na(.))))  
-  
-teste <- leda$link_withinlingdist(
+
+# Keep the unmatched
+map_unmatched <- filter(map_afro_set, is.na(b.group) == TRUE)
+
+map_unmatched %<>% filter(a.group != "French",
+                           a.group != "English",
+                           a.group != "Portuguese",
+                           a.group != "German",
+                           a.group != "Indian",
+                           a.group != "German", 
+                           a.group != "Portugues",
+                           a.group != "White/European")
+
+# Link by language distance
+map_afro_dist <- leda$link_minlingdist(
   lists.a = list(type = c("Afrobarometer"),  round = 6), 
   lists.b = list(type = c("Murdock_Map")),
   level = "dialect",
-  max.distance = .1, by.country = TRUE,
+  by.country = TRUE,
   delta = .5, expand = FALSE, 
-  agg_fun.a = mean, agg_fun.b = min)
+  agg_fun.a = min, agg_fun.b = min,
+  add_listmetadata = T)
+
+join_unmatched <- inner_join(map_unmatched, map_afro_dist,
+                             by = c("a.group", "a.iso3c"), 
+                             relationship = "many-to-many") %>%
+  dplyr::select(c("a.type.x", "a.marker.x", "a.group", "b.group.x", "a.iso3c",
+                  "b.type.x", "b.type.y", "b.group.y",  "b.iso3c.x", "b.iso3c.y",
+                  "distance"))
+
+join_unmatched %<>% dplyr::select(c("a.type", "a.groupvar", "a.marker", "b.type",
+                                   "a.iso3c", "b.iso3c", "a.group", "b.group", 
+                                   "distance"))
 
 
-teste %>%
-  dplyr::select(b.type) %>%
-  summarise_all(funs(sum(is.na(.))))
+# Filter by greatest distance form each a.group
+teste <- map_afro_dist
+teste %<>% filter(distance != 1)
+teste %<>% group_by(a.iso3c, b.group) %>%
+  mutate(max_distance=min(distance))
+
+  
+
+
+# Inner join with previously unmatched
+join_unmatched <- inner_join(map_unmatched, map_afro_dist, by = "a.group", 
+                             relationship = "many-to-many") %>%
+  dplyr::select(c("a.type.x", "a.type.y", "a.marker.x", "a.group", "b.group.x",
+                  "b.type.x", "b.type.y", "b.group.y", "distance"))
 
 
 # Use distance to match the unmatched entries in link_set

@@ -162,3 +162,6 @@ caloric_diff_map <- tm_shape(map_caloric) +
             frame = FALSE)
 
 caloric_diff_map
+
+tmap_save(caloric_diff_map, here("data", "output", "figures", 
+                       "caloric_diff_map.png"))
