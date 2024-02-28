@@ -75,13 +75,14 @@ ea_dplace %<>% filter(var_id == "EA005") %>%
 map_murdock <- left_join(map_murdock, ea_dplace, by = "soc_id")
 
 
+
 # Map of Africa
 map_africa <- st_read(dsn = here("data", "raw", "spatial", "africa_shp", 
                                  "afr_g2014_2013_0.shp"))
 
 v5_map <- tm_shape(map_murdock) +
   tm_borders(col = "darkgrey", alpha = 0.5, lwd = 1.5) +
-  tm_fill(col = "code", style = "cat", palette = "RdYlGn") + 
+  tm_fill(col = "code", style = "cat", palette = "RdYlGn", title = "Dependence on Agriculture") + 
   tm_shape(map_africa) + 
   tm_borders(col = "black", lwd = 2) +
   tm_layout(legend.position = c("left", "bottom"),
@@ -89,8 +90,6 @@ v5_map <- tm_shape(map_murdock) +
             frame = FALSE)
 
 v5_map
-
-teste <- st_drop_geometry(map_murdock)
 
 tmap_save(v5_map, here("data", "output", "figures", 
                                "murdock_map_v05.png"))

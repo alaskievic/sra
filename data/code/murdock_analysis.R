@@ -51,8 +51,6 @@ ggsave("merged_map.png", path = here("data", "output"), dpi = 300)
 
 
 ############### 2. Cleaning Ethnographic Atlas ##############
-
-
 ea_loc <- read_csv(file = here("data", "raw", "murdock_ea", "societies.csv")) %>%
   mutate(type = "ea")
 
